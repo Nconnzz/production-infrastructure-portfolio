@@ -1,0 +1,32 @@
+# Docker volumes (datos persistentes)
+grafana_data/
+prometheus_data/
+mongodb_data/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Archivos de entorno (si se agregan en el futuro)
+.env
+.env.local
+.env.*.local
+
+# Backups
+*.bak
+*.backup

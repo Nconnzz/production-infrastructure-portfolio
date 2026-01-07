@@ -1,0 +1,364 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Server Alerts
+    folder: Infrastructure
+    interval: 1m
+    rules:
+      # High CPU Usage Alert
+      - uid: high-cpu-usage
+        title: High CPU Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: CPU usage is above 80%
+          description: "Current CPU usage: {{ $values.A }}%"
+        labels:
+          severity: warning
+
+      # High Memory Usage Alert
+      - uid: high-memory-usage
+        title: High Memory Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 85
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Memory usage is above 85%
+          description: "Current memory usage: {{ $values.A }}%"
+        labels:
+          severity: warning
+
+      # High Disk Usage Alert
+      - uid: high-disk-usage
+        title: High Disk Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Disk usage is above 90%
+          description: "Current disk usage: {{ $values.A }}%"
+        labels:
+          severity: critical
+
+      # High Load Average Alert
+      - uid: high-load-average
+        title: High Load Average
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: node_load5
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 4
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Load average is too high
+          description: "Current load average (5m): {{ $values.A }}"
+        labels:
+          severity: warning
+
+      # Network Errors Alert
+      - uid: network-errors
+        title: Network Interface Errors
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m])
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Network errors detected
+          description: "Network errors rate: {{ $values.A }}/s"
+        labels:
+          severity: warning
+
+  - orgId: 1
+    name: Docker Alerts
+    folder: Infrastructure
+    interval: 1m
+    rules:
+      # Container High CPU Alert
+      - uid: container-high-cpu
+        title: Container High CPU Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: sum(rate(container_cpu_usage_seconds_total{name!=""}[5m])) by (name) * 100
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Container CPU usage is high
+          description: "Container CPU usage is above 80%"
+        labels:
+          severity: warning
+
+      # Container High Memory Alert
+      - uid: container-high-memory
+        title: Container High Memory Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: sum(container_memory_usage_bytes{name!=""}) by (name) / 1024 / 1024
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1024
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: avg
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Container memory usage is high
+          description: "Container using more than 1GB RAM"
+        labels:
+          severity: warning
+
+      # Prometheus Target Down
+      - uid: target-down
+        title: Prometheus Target Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up == 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: sum
+              refId: C
+              type: classic_conditions
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: Prometheus target is down
+          description: "One or more Prometheus targets are unreachable"
+        labels:
+          severity: critical

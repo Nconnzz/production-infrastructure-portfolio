@@ -1,0 +1,156 @@
+services:
+  # Grafana - Visualization (LTS stable)
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: grafana_cc
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=changeme
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # Prometheus - Metrics collection (latest stable)
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: prometheus_cc
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+
+  # Node Exporter - Full host metrics (latest stable)
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter_cc
+    restart: unless-stopped
+    ports:
+      - "9101:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.cpu'
+      - '--collector.cpufreq'
+      - '--collector.diskstats'
+      - '--collector.filesystem'
+      - '--collector.hwmon'
+      - '--collector.loadavg'
+      - '--collector.meminfo'
+      - '--collector.netclass'
+      - '--collector.netdev'
+      - '--collector.netstat'
+      - '--collector.os'
+      - '--collector.pressure'
+      - '--collector.stat'
+      - '--collector.thermal_zone'
+      - '--collector.time'
+      - '--collector.uname'
+      - '--collector.vmstat'
+      - '--collector.processes'
+      - '--collector.interrupts'
+      - '--collector.ksmd'
+      - '--collector.softnet'
+      - '--collector.tcpstat'
+      - '--collector.schedstat'
+      - '--collector.sockstat'
+      - '--collector.conntrack'
+    networks:
+      - monitoring
+
+  # cAdvisor - Docker container metrics (stable gcr.io)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.51.0
+    container_name: cadvisor_cc
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - monitoring
+
+  # Rocket.Chat - Team communication (stable LTS)
+  rocketchat:
+    image: rocket.chat:7.5.0
+    container_name: rocketchat_cc
+    restart: unless-stopped
+    environment:
+      - ROOT_URL=http://192.168.31.130:3101
+      - PORT=3000
+      - MONGO_URL=mongodb://mongodb:27017/rocketchat?replicaSet=rs0
+      - MONGO_OPLOG_URL=mongodb://mongodb:27017/local?replicaSet=rs0
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASS=changeme
+      - ADMIN_EMAIL=admin@localhost
+      - ADMIN_NAME=Administrator
+      - OVERWRITE_SETTING_Show_Setup_Wizard=completed
+    ports:
+      - "3101:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - monitoring
+
+  # MongoDB - Database for Rocket.Chat (LTS)
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb_cc
+    restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - monitoring
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+        try {
+          rs.status().ok
+        } catch (e) {
+          rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]});
+          sleep(1000);
+          rs.status().ok
+        }"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  grafana_data:
+  prometheus_data:
+  mongodb_data:
+
+networks:
+  monitoring:
+    driver: bridge
