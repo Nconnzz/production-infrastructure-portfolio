@@ -1,6 +1,22 @@
 # Production Infrastructure Portfolio - Monitoring & Communication Stack
 
-Stack de infraestructura de produccion con monitoreo completo de servidor y contenedores Docker, visualizacion de metricas, sistema de alertas y comunicacion de equipo.
+## Descripcion
+
+Este repositorio documenta la implementacion de un stack completo de infraestructura de produccion orientado al monitoreo y la comunicacion de equipos. El proyecto demuestra competencias en:
+
+- **Observabilidad**: Implementacion de un stack de monitoreo con Prometheus y Grafana para visualizacion de metricas en tiempo real
+- **Containerizacion**: Orquestacion de servicios con Docker Compose siguiendo mejores practicas de DevOps
+- **Alertas proactivas**: Sistema de alertas configurado para detectar problemas antes de que impacten en produccion
+- **Comunicacion de equipo**: Integracion de Rocket.Chat como plataforma de comunicacion interna
+
+### Finalidad
+
+Este proyecto fue desarrollado como parte de mi portfolio de infraestructura para demostrar habilidades practicas en:
+- Diseno e implementacion de soluciones de monitoreo enterprise
+- Configuracion de dashboards profesionales con metricas clave del sistema
+- Gestion de contenedores Docker y persistencia de datos
+- Automatizacion de alertas para mantenimiento preventivo
+- Documentacion tecnica profesional
 
 ## Arquitectura
 
@@ -54,7 +70,7 @@ Stack de infraestructura de produccion con monitoreo completo de servidor y cont
 
 1. Clonar el repositorio:
 ```bash
-git clone https://github.com/tu-usuario/production-infrastructure-portfolio.git
+git clone https://github.com/Nconnzz/production-infrastructure-portfolio.git
 cd production-infrastructure-portfolio
 ```
 
@@ -72,9 +88,9 @@ docker compose ps
 
 | Servicio | URL | Credenciales Default |
 |----------|-----|---------------------|
-| Grafana | http://localhost:3001 | admin / changeme |
+| Grafana | http://localhost:3001 | admin / ******** |
 | Prometheus | http://localhost:9091 | - |
-| Rocket.Chat | http://localhost:3101 | admin / changeme |
+| Rocket.Chat | http://localhost:3101 | admin / ******** |
 | Node Exporter | http://localhost:9101/metrics | - |
 | cAdvisor | http://localhost:8080 | - |
 
@@ -248,4 +264,6 @@ MIT License
 
 ## Autor
 
-Desarrollado con Claude Code
+Nicolas Nunez
+
+Repositorio: https://github.com/Nconnzz/production-infrastructure-portfolio
